@@ -5,9 +5,9 @@ spring:
     active: dev
   
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:${DB_HOST:localhost}}:${PGPORT:${DB_PORT:5435}}/${PGDATABASE:${DB_NAME:shareint_dev}}?stringtype=unspecified}
-    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:${DB_USER:postgres}}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:${DB_PASSWORD:postgrespassword}}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:shareint_dev}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgrespassword}}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
