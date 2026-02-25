@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,12 +41,19 @@ public class User implements UserDetails {
     private String fullName;
     
     @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
     private RoleType role;
     
     private boolean isVerified;
-    
+
+    /** Set to true once NID photo is submitted and verified by OCR + government API. */
+    private boolean isNidVerified;
+
+    /** URL to the uploaded NID photo (stored in cloud storage). Used for future OCR verification. */
+    private String nidPhotoUrl;
+
     private String nidNumber;
-    
+
     private String avatarUrl;
     
     @Builder.Default

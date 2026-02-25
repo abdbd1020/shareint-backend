@@ -33,4 +33,12 @@ public class LocationController {
         }
         return ResponseEntity.ok(locationService.searchLocations(q.trim()));
     }
+
+    @GetMapping("/districts/search")
+    public ResponseEntity<List<LocationDTO>> searchDistricts(@RequestParam String q) {
+        if (q == null || q.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(locationService.searchDistricts(q.trim()));
+    }
 }

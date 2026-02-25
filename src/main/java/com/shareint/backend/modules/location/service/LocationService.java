@@ -41,6 +41,14 @@ public class LocationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<LocationDTO> searchDistricts(String query) {
+        return locationRepository.searchDistricts(query)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private LocationDTO mapToDTO(Location location) {
         return LocationDTO.builder()
                 .id(location.getId())

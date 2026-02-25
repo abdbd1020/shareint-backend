@@ -1,5 +1,6 @@
 package com.shareint.backend.modules.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shareint.backend.modules.user.model.User.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,10 +14,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
-    
+
     private String token;
     private UserDto user;
-    
+
     @Data
     @Builder
     @AllArgsConstructor
@@ -26,6 +27,9 @@ public class AuthResponse {
         private String phoneNumber;
         private String fullName;
         private RoleType role;
+
+        // @JsonProperty ensures Jackson serializes this as "isVerified" not "verified"
+        @JsonProperty("isVerified")
         private boolean isVerified;
     }
 }

@@ -3,6 +3,7 @@ package com.shareint.backend.core.exception;
 import com.shareint.backend.core.dto.BaseResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +27,30 @@ public class GlobalExceptionHandler {
                 .body(BaseResponse.error(ex.getStatus(), ex.getMessage(), request.getDescription(false)));
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<BaseResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        logger.error("ResourceNotFoundException: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(BaseResponse.error(HttpStatus.NOT_FOUND, ex.getMessage(), request.getDescription(false)));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<BaseResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+        logger.error("DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage());
+        String message = "A record with that value already exists.";
+        if (ex.getMostSpecificCause().getMessage() != null &&
+                ex.getMostSpecificCause().getMessage().contains("nid_number")) {
+            message = "That NID number is already registered.";
+        } else if (ex.getMostSpecificCause().getMessage() != null &&
+                ex.getMostSpecificCause().getMessage().contains("phone_number")) {
+            message = "That phone number is already registered.";
+        }
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(BaseResponse.error(HttpStatus.CONFLICT, message, request.getDescription(false)));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<BaseResponse<Void>> handleValidationException(MethodArgumentNotValidException ex, WebRequest request) {
         String details = ex.getBindingResult().getFieldErrors().stream()
@@ -34,7 +59,7 @@ public class GlobalExceptionHandler {
         logger.error("ValidationException: {}", details);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(BaseResponse.error(HttpStatus.BAD_REQUEST, "Validation Failed", details));
+                .body(BaseResponse.error(HttpStatus.BAD_REQUEST, "Validation failed: " + details, details));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -47,7 +72,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<Void>> handleGlobalException(Exception ex, WebRequest request) {
-        logger.error("Unhandled Exception: ", ex);
+        logger.error("Unhandled Exception on {}: ", request.getDescription(false), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(BaseResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request.getDescription(false)));

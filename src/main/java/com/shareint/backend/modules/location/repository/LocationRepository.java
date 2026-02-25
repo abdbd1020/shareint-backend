@@ -21,4 +21,11 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
            "l.nameBn LIKE CONCAT('%', :query, '%')) " +
            "ORDER BY l.nameEn ASC")
     List<Location> searchActiveLocations(@Param("query") String query);
+
+    @Query("SELECT l FROM Location l WHERE l.isActive = true AND " +
+           "l.parent IS NOT NULL AND l.parent.parent IS NULL AND " +
+           "(LOWER(l.nameEn) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "l.nameBn LIKE CONCAT('%', :query, '%')) " +
+           "ORDER BY l.nameEn ASC")
+    List<Location> searchDistricts(@Param("query") String query);
 }

@@ -51,6 +51,8 @@ public class UserService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .isVerified(user.isVerified())
+                .isNidVerified(user.isNidVerified())
+                .nidPhotoUrl(user.getNidPhotoUrl())
                 .nidNumber(user.getNidNumber())
                 .avatarUrl(user.getAvatarUrl())
                 .averageRating(user.getAverageRating())
