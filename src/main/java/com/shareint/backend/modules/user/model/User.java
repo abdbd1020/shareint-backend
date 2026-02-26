@@ -55,7 +55,17 @@ public class User implements UserDetails {
     private String nidNumber;
 
     private String avatarUrl;
-    
+
+    /** BCrypt-hashed password. Null if user was registered via OTP-only (legacy). */
+    private String passwordHash;
+
+    /** Optional email address. Must be unique per user. */
+    private String email;
+
+    /** Set to true once user completes the profile setup (name + password + optional email). */
+    @Builder.Default
+    private boolean isProfileComplete = false;
+
     @Builder.Default
     private BigDecimal averageRating = BigDecimal.ZERO;
     
@@ -82,9 +92,8 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        // ShareInt uses Phone + OTP, so we don't store raw passwords on the user table directly
-        // We return an empty string to satisfy Spring Security if password auth is bypassed manually for OTP
-        return "";
+        // Return the stored BCrypt hash, or empty string for OTP-only (legacy) users
+        return passwordHash != null ? passwordHash : "";
     }
 
     @Override

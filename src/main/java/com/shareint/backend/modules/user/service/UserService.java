@@ -36,9 +36,6 @@ public class UserService {
         if (request.getAvatarUrl() != null) {
             user.setAvatarUrl(request.getAvatarUrl());
         }
-        if (request.getRole() != null) {
-            user.setRole(request.getRole());
-        }
 
         user = userRepository.save(user);
         return mapToResponse(user);
@@ -49,9 +46,11 @@ public class UserService {
                 .id(user.getId())
                 .phoneNumber(user.getPhoneNumber())
                 .fullName(user.getFullName())
+                .email(user.getEmail())
                 .role(user.getRole())
                 .isVerified(user.isVerified())
                 .isNidVerified(user.isNidVerified())
+                .isProfileComplete(user.isProfileComplete())
                 .nidPhotoUrl(user.getNidPhotoUrl())
                 .nidNumber(user.getNidNumber())
                 .avatarUrl(user.getAvatarUrl())

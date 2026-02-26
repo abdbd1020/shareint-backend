@@ -39,12 +39,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<BaseResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
         logger.error("DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage());
         String message = "A record with that value already exists.";
-        if (ex.getMostSpecificCause().getMessage() != null &&
-                ex.getMostSpecificCause().getMessage().contains("nid_number")) {
-            message = "That NID number is already registered.";
-        } else if (ex.getMostSpecificCause().getMessage() != null &&
-                ex.getMostSpecificCause().getMessage().contains("phone_number")) {
-            message = "That phone number is already registered.";
+        if (ex.getMostSpecificCause().getMessage() != null) {
+            if (ex.getMostSpecificCause().getMessage().contains("nid_number")) {
+                message = "That NID number is already registered.";
+            } else if (ex.getMostSpecificCause().getMessage().contains("phone_number")) {
+                message = "That phone number is already registered.";
+            } else if (ex.getMostSpecificCause().getMessage().contains("email")) {
+                message = "That email address is already registered.";
+            }
         }
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)

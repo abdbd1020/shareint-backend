@@ -26,10 +26,13 @@ public class AuthResponse {
         private UUID id;
         private String phoneNumber;
         private String fullName;
+        private String email;
         private RoleType role;
 
-        // @JsonProperty ensures Jackson serializes this as "isVerified" not "verified"
         @JsonProperty("isVerified")
         private boolean isVerified;
+
+        @JsonProperty("isProfileComplete")
+        private boolean isProfileComplete;
     }
 }

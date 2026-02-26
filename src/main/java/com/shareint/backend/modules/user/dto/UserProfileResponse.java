@@ -18,14 +18,17 @@ public class UserProfileResponse {
     private UUID id;
     private String phoneNumber;
     private String fullName;
+    private String email;
     private RoleType role;
 
-    // @JsonProperty ensures Jackson serializes this as "isVerified" not "verified"
     @JsonProperty("isVerified")
     private boolean isVerified;
 
     @JsonProperty("isNidVerified")
     private boolean isNidVerified;
+
+    @JsonProperty("isProfileComplete")
+    private boolean isProfileComplete;
 
     private String nidPhotoUrl;
     private String nidNumber;

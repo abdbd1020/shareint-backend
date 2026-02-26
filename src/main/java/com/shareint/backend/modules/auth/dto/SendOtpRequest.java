@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 public class SendOtpRequest {
     
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+8801[3-9]\\d{8}$", message = "Must be a valid Bangladesh phone number starting with +880")
+    @Pattern(regexp = "^(\\+?880|0)1[3-9]\\d{8}$", message = "Must be a valid Bangladesh mobile number (e.g., 01712345678 or +8801712345678)")
     private String phoneNumber;
 }

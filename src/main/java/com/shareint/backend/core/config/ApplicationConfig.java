@@ -21,8 +21,9 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> repository.findByPhoneNumber(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return identifier -> repository.findByPhoneNumber(identifier)
+                .or(() -> repository.findByEmail(identifier))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier));
     }
 
     @Bean
