@@ -20,11 +20,20 @@ public class BookingDTO {
     private UUID tripId;
     private UUID passengerId;
     private String passengerName;
+    private String passengerPhone;
+    private String driverName;
+    private String driverPhone;
+    private String originName;
+    private String destinationName;
+    private Instant departureTime;
+    private BigDecimal pricePerSeat;
     private BigDecimal totalSeatPrice;
     private BigDecimal platformFee;
     private BigDecimal totalCharged;
     private Integer bookedSeatsCount;
     private List<String> seatIdentifiers;
     private BookingStatus status;
+    private String paymentMethod;
+    private Instant commissionPaidAt;
     private Instant createdAt;
 }

@@ -64,6 +64,14 @@ public class GlobalExceptionHandler {
                 .body(BaseResponse.error(HttpStatus.BAD_REQUEST, "Validation failed: " + details, details));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<BaseResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        logger.error("IllegalArgumentException: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(BaseResponse.error(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getDescription(false)));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<BaseResponse<Void>> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
         logger.error("AccessDeniedException: {}", ex.getMessage());

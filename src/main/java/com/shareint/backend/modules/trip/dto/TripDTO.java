@@ -18,8 +18,11 @@ public class TripDTO {
     private UUID id;
     private UUID driverId;
     private String driverName;
+    private String driverAvatarUrl;
+    private BigDecimal driverAverageRating;
     private UUID vehicleId;
     private String vehicleModel;
+    private String vehicleColor;
     private UUID originLocationId;
     private String originName;
     private UUID destinationLocationId;

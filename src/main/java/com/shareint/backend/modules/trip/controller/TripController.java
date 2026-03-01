@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/trips")
+@RequestMapping("/api/web/v1/trips")
 @RequiredArgsConstructor
 public class TripController {
 
@@ -41,6 +41,27 @@ public class TripController {
             @PathVariable UUID tripId) {
         String phoneNumber = authentication.getName();
         return ResponseEntity.ok(tripService.cancelTrip(phoneNumber, tripId));
+    }
+
+    @PutMapping("/{tripId}/start")
+    public ResponseEntity<TripDTO> startTrip(
+            Authentication authentication,
+            @PathVariable UUID tripId) {
+        String phoneNumber = authentication.getName();
+        return ResponseEntity.ok(tripService.startTrip(phoneNumber, tripId));
+    }
+
+    @PutMapping("/{tripId}/complete")
+    public ResponseEntity<TripDTO> completeTrip(
+            Authentication authentication,
+            @PathVariable UUID tripId) {
+        String phoneNumber = authentication.getName();
+        return ResponseEntity.ok(tripService.completeTrip(phoneNumber, tripId));
+    }
+
+    @GetMapping("/{tripId}")
+    public ResponseEntity<TripDTO> getTripById(@PathVariable UUID tripId) {
+        return ResponseEntity.ok(tripService.getTripById(tripId));
     }
 
     @GetMapping("/search")

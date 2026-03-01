@@ -10,7 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/users/device-tokens")
+@RequestMapping("/api/web/v1/users/device-tokens")
 @RequiredArgsConstructor
 public class DeviceTokenController {
 

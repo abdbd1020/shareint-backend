@@ -1,6 +1,7 @@
 package com.shareint.backend.modules.trip.service;
 
 import com.shareint.backend.core.exception.ResourceNotFoundException;
+import com.shareint.backend.core.exception.TripConflictException;
 import com.shareint.backend.modules.location.model.Location;
 import com.shareint.backend.modules.location.repository.LocationRepository;
 import com.shareint.backend.modules.trip.dto.CreateTripRequest;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,10 +27,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TripService {
 
+    private static final long FALLBACK_DURATION_HOURS = 8L;
+
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
     private final LocationRepository locationRepository;
+
+    private boolean overlaps(Instant dep1, Instant end1, Instant dep2, Instant end2) {
+        Instant e1 = end1 != null ? end1 : dep1.plus(FALLBACK_DURATION_HOURS, ChronoUnit.HOURS);
+        Instant e2 = end2 != null ? end2 : dep2.plus(FALLBACK_DURATION_HOURS, ChronoUnit.HOURS);
+        return dep1.isBefore(e2) && dep2.isBefore(e1);
+    }
 
     @Transactional
     public TripDTO publishTrip(String driverPhoneNumber, CreateTripRequest request) {
@@ -55,6 +65,21 @@ public class TripService {
 
         Location destination = locationRepository.findById(request.getDestinationLocationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Destination location not found"));
+
+        // Conflict detection: no temporal overlap for same driver or same vehicle
+        List<Trip> activeTrips = tripRepository.findActiveTripsForDriverOrVehicle(
+                driver.getId(), vehicle.getId(), UUID.randomUUID());
+        for (Trip existing : activeTrips) {
+            if (overlaps(request.getDepartureTime(), request.getEstimatedArrivalTime(),
+                         existing.getDepartureTime(), existing.getEstimatedArrivalTime())) {
+                throw new TripConflictException(String.format(
+                        "Scheduling conflict: this trip overlaps with your existing trip %s → %s departing at %s. " +
+                        "Please choose a different time.",
+                        existing.getOrigin().getNameEn(),
+                        existing.getDestination().getNameEn(),
+                        existing.getDepartureTime()));
+            }
+        }
 
         Trip trip = Trip.builder()
                 .driver(driver)
@@ -109,6 +134,60 @@ public class TripService {
         return mapToDTO(trip);
     }
 
+    @Transactional
+    public TripDTO startTrip(String driverPhoneNumber, UUID tripId) {
+        User driver = userRepository.findByPhoneNumber(driverPhoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+        if (!trip.getDriver().getId().equals(driver.getId())) {
+            throw new IllegalArgumentException("You are not authorized to start this trip");
+        }
+
+        if (trip.getStatus() != Trip.TripStatus.SCHEDULED) {
+            throw new IllegalArgumentException("Only SCHEDULED trips can be started");
+        }
+
+        List<Trip> inProgress = tripRepository.findInProgressForDriverOrVehicle(
+                driver.getId(), trip.getVehicle().getId(), tripId);
+        if (!inProgress.isEmpty()) {
+            throw new TripConflictException(
+                    "You already have a trip in progress. Complete it before starting another.");
+        }
+
+        trip.setStatus(Trip.TripStatus.IN_PROGRESS);
+        return mapToDTO(tripRepository.save(trip));
+    }
+
+    @Transactional
+    public TripDTO completeTrip(String driverPhoneNumber, UUID tripId) {
+        User driver = userRepository.findByPhoneNumber(driverPhoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+        if (!trip.getDriver().getId().equals(driver.getId())) {
+            throw new IllegalArgumentException("You are not authorized to complete this trip");
+        }
+
+        if (trip.getStatus() != Trip.TripStatus.IN_PROGRESS) {
+            throw new IllegalArgumentException("Only IN_PROGRESS trips can be completed");
+        }
+
+        trip.setStatus(Trip.TripStatus.COMPLETED);
+        return mapToDTO(tripRepository.save(trip));
+    }
+
+    @Transactional(readOnly = true)
+    public TripDTO getTripById(UUID tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+        return mapToDTO(trip);
+    }
+
     @Transactional(readOnly = true)
     public List<TripDTO> searchTrips(UUID originId, UUID destinationId, Instant dateFrom, Instant dateTo, Integer minSeats) {
         int requiredSeats = minSeats != null ? minSeats : 1;
@@ -124,8 +203,11 @@ public class TripService {
                 .id(trip.getId())
                 .driverId(trip.getDriver().getId())
                 .driverName(trip.getDriver().getFullName())
+                .driverAvatarUrl(trip.getDriver().getAvatarUrl())
+                .driverAverageRating(trip.getDriver().getAverageRating())
                 .vehicleId(trip.getVehicle().getId())
                 .vehicleModel(trip.getVehicle().getMake() + " " + trip.getVehicle().getModel())
+                .vehicleColor(trip.getVehicle().getColor())
                 .originLocationId(trip.getOrigin().getId())
                 .originName(trip.getOrigin().getNameEn())
                 .destinationLocationId(trip.getDestination().getId())

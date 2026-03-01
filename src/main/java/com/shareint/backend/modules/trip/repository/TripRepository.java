@@ -15,6 +15,23 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
     
     List<Trip> findByDriverIdOrderByDepartureTimeDesc(UUID driverId);
 
+    @Query("SELECT t FROM Trip t WHERE (t.driver.id = :driverId OR t.vehicle.id = :vehicleId) " +
+           "AND t.status IN ('SCHEDULED', 'IN_PROGRESS') " +
+           "AND t.id <> :excludeId")
+    List<Trip> findActiveTripsForDriverOrVehicle(
+            @Param("driverId") UUID driverId,
+            @Param("vehicleId") UUID vehicleId,
+            @Param("excludeId") UUID excludeId
+    );
+
+    @Query("SELECT t FROM Trip t WHERE (t.driver.id = :driverId OR t.vehicle.id = :vehicleId) " +
+           "AND t.status = 'IN_PROGRESS' AND t.id <> :tripId")
+    List<Trip> findInProgressForDriverOrVehicle(
+            @Param("driverId") UUID driverId,
+            @Param("vehicleId") UUID vehicleId,
+            @Param("tripId") UUID tripId
+    );
+
     @Query("SELECT t FROM Trip t WHERE t.status = 'SCHEDULED' " +
            "AND t.availableSeats >= :minSeats " +
            "AND (:originId IS NULL OR t.origin.id = :originId) " +

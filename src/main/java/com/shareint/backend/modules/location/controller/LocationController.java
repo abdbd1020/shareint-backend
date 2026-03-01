@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/locations")
+@RequestMapping("/api/web/v1/locations")
 @RequiredArgsConstructor
 public class LocationController {
 
@@ -40,5 +40,13 @@ public class LocationController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(locationService.searchDistricts(q.trim()));
+    }
+
+    @GetMapping("/zillas-upazillas/search")
+    public ResponseEntity<List<LocationDTO>> searchZillasAndUpazillas(@RequestParam String q) {
+        if (q == null || q.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(locationService.searchZillasAndUpazillas(q.trim()));
     }
 }

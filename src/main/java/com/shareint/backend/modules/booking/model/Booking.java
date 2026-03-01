@@ -76,6 +76,12 @@ public class Booking {
 
     private Instant deletedAt;
 
+    /** How the passenger paid the driver: CASH, BKASH, or CARD */
+    private String paymentMethod;
+
+    /** When the driver settled the platform commission with ShareInt */
+    private Instant commissionPaidAt;
+
     public enum BookingStatus {
         PENDING_PAYMENT, CONFIRMED, CANCELLED, COMPLETED, REFUNDED
     }

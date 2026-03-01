@@ -1,12 +1,11 @@
 package com.shareint.backend.modules.chat.service;
 
 import com.shareint.backend.core.exception.ResourceNotFoundException;
+import com.shareint.backend.modules.booking.model.Booking;
+import com.shareint.backend.modules.booking.repository.BookingRepository;
 import com.shareint.backend.modules.chat.dto.ChatRoomDTO;
-import com.shareint.backend.modules.chat.dto.CreateChatRoomRequest;
 import com.shareint.backend.modules.chat.model.ChatRoom;
 import com.shareint.backend.modules.chat.repository.ChatRoomRepository;
-import com.shareint.backend.modules.trip.model.Trip;
-import com.shareint.backend.modules.trip.repository.TripRepository;
 import com.shareint.backend.modules.user.model.User;
 import com.shareint.backend.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,46 +20,54 @@ import java.util.UUID;
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
-    private final TripRepository tripRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
+    /**
+     * Either the passenger OR the driver can call this with their booking ID.
+     * The endpoint verifies that the caller is one of the two parties, then
+     * finds or creates the shared chat room.
+     */
     @Transactional
-    public ChatRoomDTO initiateChatRoom(String passengerPhoneNumber, CreateChatRoomRequest request) {
-        User passenger = userRepository.findByPhoneNumber(passengerPhoneNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Passenger not found"));
+    public ChatRoomDTO initiateChatRoomByBooking(String phoneNumber, UUID bookingId) {
+        User currentUser = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        User driver = trip.getDriver();
+        User driver = booking.getTrip().getDriver();
+        User passenger = booking.getPassenger();
 
-        if (passenger.getId().equals(driver.getId())) {
-            throw new IllegalArgumentException("Driver cannot chat with themselves");
+        boolean isDriver = driver.getId().equals(currentUser.getId());
+        boolean isPassenger = passenger.getId().equals(currentUser.getId());
+
+        if (!isDriver && !isPassenger) {
+            throw new IllegalArgumentException("You are not a participant in this booking");
         }
 
-        // Ideally, we would also verify if a Booking exists between passenger and trip, 
-        // to prevent random users from messaging drivers they haven't booked with.
-        
+        return findOrCreateRoom(booking, passenger, driver);
+    }
+
+    private ChatRoomDTO findOrCreateRoom(Booking booking, User passenger, User driver) {
         Optional<ChatRoom> existingRoom = chatRoomRepository.findByTripIdAndPassengerIdAndDriverId(
-                trip.getId(), passenger.getId(), driver.getId());
+                booking.getTrip().getId(), passenger.getId(), driver.getId());
 
         if (existingRoom.isPresent()) {
             return mapToDTO(existingRoom.get());
         }
 
-        // Create a unique deterministic firebase room ID for easier lookup on the mobile side
-        String firebaseRoomId = "room_" + trip.getId() + "_" + passenger.getId();
+        // Deterministic ID — mobile clients can derive the same value without an API call
+        String firebaseRoomId = "room_" + booking.getTrip().getId() + "_" + passenger.getId();
 
         ChatRoom chatRoom = ChatRoom.builder()
-                .trip(trip)
+                .trip(booking.getTrip())
                 .passenger(passenger)
                 .driver(driver)
                 .firebaseRoomId(firebaseRoomId)
                 .build();
 
-        chatRoom = chatRoomRepository.save(chatRoom);
-
-        return mapToDTO(chatRoom);
+        return mapToDTO(chatRoomRepository.save(chatRoom));
     }
 
     private ChatRoomDTO mapToDTO(ChatRoom chatRoom) {

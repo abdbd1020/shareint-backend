@@ -32,6 +32,9 @@ public class AuthResponse {
         @JsonProperty("isVerified")
         private boolean isVerified;
 
+        @JsonProperty("isNidVerified")
+        private boolean isNidVerified;
+
         @JsonProperty("isProfileComplete")
         private boolean isProfileComplete;
     }

@@ -39,7 +39,7 @@ public class VehicleService {
                 .licensePlate(request.getLicensePlate())
                 .color(request.getColor())
                 .totalCapacity(request.getTotalCapacity())
-                .isApproved(false) // Pending manual admin approval
+                .isApproved(true) // Auto-approved until admin approval workflow is built
                 .creator(driver)
                 .updater(driver)
                 .build();

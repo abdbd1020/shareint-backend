@@ -49,12 +49,38 @@ public class LocationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<LocationDTO> searchZillasAndUpazillas(String query) {
+        return locationRepository.searchZillasAndUpazillas(query)
+                .stream()
+                .map(this::mapToDTOWithParent)
+                .collect(Collectors.toList());
+    }
+
     private LocationDTO mapToDTO(Location location) {
         return LocationDTO.builder()
                 .id(location.getId())
                 .nameEn(location.getNameEn())
                 .nameBn(location.getNameBn())
                 .parentId(location.getParent() != null ? location.getParent().getId() : null)
+                .isDistanceConsidered(location.isDistanceConsidered())
+                .isActive(location.isActive())
+                .build();
+    }
+
+    private LocationDTO mapToDTOWithParent(Location location) {
+        UUID parentId = null;
+        String parentNameEn = null;
+        if (location.getParent() != null) {
+            parentId = location.getParent().getId();
+            parentNameEn = location.getParent().getNameEn();
+        }
+        return LocationDTO.builder()
+                .id(location.getId())
+                .nameEn(location.getNameEn())
+                .nameBn(location.getNameBn())
+                .parentId(parentId)
+                .parentNameEn(parentNameEn)
                 .isDistanceConsidered(location.isDistanceConsidered())
                 .isActive(location.isActive())
                 .build();

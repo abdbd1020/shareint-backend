@@ -16,6 +16,7 @@ public class LocationDTO {
     private String nameEn;
     private String nameBn;
     private UUID parentId;
+    private String parentNameEn;
     private boolean isDistanceConsidered;
     private boolean isActive;
 }

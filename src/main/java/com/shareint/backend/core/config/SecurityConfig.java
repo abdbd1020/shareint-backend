@@ -4,6 +4,7 @@ import com.shareint.backend.core.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,22 +29,29 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(org.springframework.security.config.Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+                        // Public endpoints — no auth required
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/api/web/v1/auth/**",
                                 "/api/mobile/v1/auth/**",
                                 "/api/v1/locations/**",
+                                "/api/web/v1/locations/**",
+                                "/api/mobile/v1/locations/**",
+                                // SSLCommerz calls this server-to-server, not via user JWT
+                                "/api/web/v1/payments/webhook/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                // Spring Boot error handler — must be public or security blocks it
+                                "/error"
+                        ).permitAll()
+                        // Public read-only trip endpoints (guests can browse/search)
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/web/v1/trips/search",
+                                "/api/web/v1/trips/*"
                         ).permitAll()
                         // Next.js Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Passenger actions
-                        .requestMatchers("/api/**/passenger/**").hasRole("PASSENGER")
-                        // Driver actions
-                        .requestMatchers("/api/**/driver/**").hasRole("DRIVER")
                         // Default any other request must be authenticated
                         .anyRequest().authenticated()
                 )

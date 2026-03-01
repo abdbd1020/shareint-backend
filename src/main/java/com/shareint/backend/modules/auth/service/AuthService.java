@@ -303,6 +303,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .isVerified(user.isVerified())
+                .isNidVerified(user.isNidVerified())
                 .isProfileComplete(user.isProfileComplete())
                 .build();
     }
